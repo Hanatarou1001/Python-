@@ -1,0 +1,27 @@
+from oauth2client.service_account import ServiceAccountCredentials
+import gspread
+import yfinance as yf
+
+# yfinanceを使ってAppleの株価データを取得
+df = yf.download('AAPL', start='2020-01-01', end='2023-01-01')
+
+# 認証情報の設定
+json_file_path = r'C:\Users\tomio\Python-\Python-\kabu-403511-b5b3c3f74360.json'
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name(json_file_path, scope)
+client = gspread.authorize(creds)
+
+# スプレッドシートのオープン
+spreadsheet_url = "https://docs.google.com/spreadsheets/d/1-3AY5AliVj2OVYYqVq5xRUjMnHYzz0MDBy2xcWZE0iw/edit#gid=1416193260"
+spreadsheet = client.open_by_url(spreadsheet_url)
+
+# シートの選択
+worksheet = spreadsheet.worksheet('株式データ表')
+
+# データのリストを作成
+data_to_insert = []
+for index, row in df.iterrows():
+    data_to_insert.append([index.strftime('%Y-%m-%d')] + list(row.values))
+
+# スプレッドシートにデータを一括で書き込み
+worksheet.update('C3', data_to_insert)
